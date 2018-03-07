@@ -50,3 +50,14 @@ class Pipe(pg.sprite.Sprite):
 
     def update(self):
         self.rect.x -= WINDOW_SPEED
+
+class PipesGroup():
+    def __init__(self, x, game):
+        offset = random.choice([-150, -100, -50, 0, 50, 100, 150])
+        self.game = game
+        self.top = Pipe(x, PIPE_TOP_START + offset)
+        self.bottom = Pipe(x, PIPE_BOTTOM_START + offset)
+        game.pipes.add(self.top)
+        game.pipes.add(self.bottom)
+        game.all_sprites.add(self.top)
+        game.all_sprites.add(self.bottom)
