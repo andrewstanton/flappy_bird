@@ -1,5 +1,5 @@
 # game options/settings
-TITLE = "Flappy Bird"
+TITLE = "Flappy Plane"
 WIDTH = 480
 HEIGHT = 600
 FPS = 60
@@ -16,6 +16,7 @@ SPRITESHEET_XML = 'sheet.xml'
 PLAYER_GRAV = 0.4
 PLAYER_JUMP = 10
 PLAYER_Z = 2
+PLAYER_X = WIDTH * 1 / 4
 
 # Window Properties
 WINDOW_SPEED = 2
@@ -33,6 +34,7 @@ PIPE_BOTTOM_START = HEIGHT / 2 + (PIPE_GAP / 2)
 
 # Ground Properties
 GROUND_Z = 3
+GROUND_HEIGHT = HEIGHT + 20
 
 # define colors
 WHITE = (255, 255, 255)

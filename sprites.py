@@ -10,7 +10,7 @@ class Spritesheet():
         self.spritesheet = pg.image.load(sprite).convert_alpha()
         self.xml = minidom.parse(xml)
 
-    def get_image(self, name):
+    def get_image(self, name, x_over = None, y_over = None, w_over = None, h_over=None):
         # get image data
         images = self.xml.getElementsByTagName('SubTexture')
         x = 0
@@ -21,10 +21,14 @@ class Spritesheet():
         # get data
         for img in images:
             if img.attributes['name'].value == name:
-                x = int(img.attributes['x'].value)
-                y = int(img.attributes['y'].value)
-                w = int(img.attributes['width'].value)
-                h = int(img.attributes['height'].value)
+                if x_over is None:
+                    x = int(img.attributes['x'].value)
+                if y_over is None:
+                    y = int(img.attributes['y'].value)
+                if w_over is None:
+                    w = int(img.attributes['width'].value)
+                if y_over is None:
+                    h = int(img.attributes['height'].value)
 
         image = pg.Surface((w, h), pg.SRCALPHA)
         image.blit(self.spritesheet, (0, 0), (x, y, w, h))
@@ -34,8 +38,8 @@ class Spritesheet():
 
 class Background(pg.sprite.Sprite):
     def __init__(self, game):
-        pg.sprite.Sprite.__init__(self)  #call Sprite initializer
-        self.image = game.game_spritesheet.get_image("background.png")
+        pg.sprite.Sprite.__init__(self)  
+        self.image = game.game_spritesheet.get_image("background.png", None, None, WIDTH, HEIGHT)
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = (0, 0)
 
@@ -51,8 +55,8 @@ class Player(pg.sprite.Sprite):
         self.load_images()
         self.image = game.game_spritesheet.get_image("planeBlue1.png")
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH / 2, HEIGHT / 2)
-        self.pos = vec(WIDTH / 2, HEIGHT / 2)
+        self.rect.center = (PLAYER_X, HEIGHT / 2)
+        self.pos = vec(PLAYER_X, HEIGHT / 2)
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
 
@@ -102,10 +106,15 @@ class Pipe(pg.sprite.Sprite):
     def update(self):
         self.rect.x -= WINDOW_SPEED
 
+        if self.rect.x < PLAYER_X - self.group.game.player.rect.width / 2 and not self.group.scored:
+            self.group.game.score += 1
+            self.group.scored = True
+
 class PipesGroup():
     def __init__(self, x, game):
         offset = random.choice([-150, -100, -50, 0, 50, 100, 150])
         self.game = game
+        self.scored = False
         self.top = Pipe(x, PIPE_TOP_START + offset, self)
         self.bottom = Pipe(x, PIPE_BOTTOM_START + offset, self)
         self.latest = True
@@ -115,13 +124,15 @@ class PipesGroup():
         game.all_sprites.add(self.bottom)
 
 class Ground(pg.sprite.Sprite):
-    def __init__(self, game):
+    def __init__(self, x, game):
         self._layer = GROUND_Z
         pg.sprite.Sprite.__init__(self)
         self.game = game
         self.image = game.game_spritesheet.get_image("groundGrass.png")
         self.rect = self.image.get_rect()
-        self.rect.midbottom = (WIDTH / 2, HEIGHT + 20)
+        self.rect.bottomleft = (x, GROUND_HEIGHT)
 
     def update(self):
         self.mask = pg.mask.from_surface(self.image)
+        self.rect.x -= WINDOW_SPEED
+        

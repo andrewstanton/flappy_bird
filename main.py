@@ -53,16 +53,26 @@ class Game:
         self.game_spritesheet = Spritesheet(sprite_sheet, sprite_xml_path)
 
     def new(self):
-        # start a new game
+        #score
+        self.score = 0
+
+        #set up sprite groups
         self.all_sprites = pg.sprite.LayeredUpdates()
         self.pipes = pg.sprite.Group()
-        self.groundG = pg.sprite.Group()
+        self.grounds = pg.sprite.Group()
         self.player = Player(self)
-        self.ground = Ground(self)
-        #self.background = Background(self)
+
+        # ground
+        self.ground = Ground(0, self)
+        self.ground_width = self.ground.rect.width
+        self.ground2 = Ground(self.ground_width, self)
+        
+        # sprite groups
         self.all_sprites.add(self.player)
         self.all_sprites.add(self.ground)
-        self.groundG.add(self.ground)
+        self.all_sprites.add(self.ground2)
+        self.grounds.add(self.ground)
+        self.grounds.add(self.ground2)
 
         # initial pipes
         PipesGroup(WIDTH + 150, self)
@@ -82,13 +92,18 @@ class Game:
         # Game Loop - Update
         self.all_sprites.update()
 
-        # player falls / dies
-        hits = pg.sprite.spritecollide(self.player, self.groundG, False, pg.sprite.collide_mask)
+        # ground collision
+        hits = pg.sprite.spritecollide(self.player, self.grounds, False, pg.sprite.collide_mask)
         for hit in hits:
             self.playing = False
 
+        # ground moving
+        for ground in self.grounds:
+            if ground.rect.right < 0:
+                ground.rect.x = self.ground_width
+
+        # remove pipe
         for pipe in self.pipes:
-            # remove pipe
             if pipe.rect.right < -50:
                 pipe.kill()
             # add new pipe
@@ -96,6 +111,7 @@ class Game:
                 pipe.group.latest = False
                 PipesGroup(WIDTH + PIPE_OFFSCREEN_GAP, self)
 
+        # pipe collison
         hits = pg.sprite.spritecollide(self.player, self.pipes, False)
         for hit in hits:
             self.playing = False
@@ -122,19 +138,30 @@ class Game:
 
         # Game Loop - draw
         self.screen.fill(BACKGROUND)
-        #self.screen.blit(self.background.image, self.background.rect)
+        #bg = self.game_spritesheet.get_image("background.png", None, None, WIDTH, HEIGHT)
+        #bg_rect = bg.get_rect()
+        #bg_rect.left, bg_rect.top = (0, 0)
+        #self.screen.blit(bg, bg_rect)
+        
         self.all_sprites.draw(self.screen)
+
+        # Draw Score
+        self.draw_text(str(self.score), self.font, 42, BLACK, WIDTH / 2, 40, align="center")
 
         # *after* drawing everything, flip the display
         pg.display.flip()
 
     def show_start_screen(self):
-        # game splash/start screen
-        pass
-
+        self.screen.fill(WHITE)
+        self.draw_text(TITLE, self.font, 45, BLACK, WIDTH / 2, HEIGHT / 2, align="center")
+        self.draw_text("Press A Key To Start", self.font, 24, BLACK, WIDTH / 2, HEIGHT / 2 + 50, align="center")
+        pg.display.flip()
+        self.wait_for_key()
+        
     def show_go_screen(self):
         self.screen.fill(WHITE)
         self.draw_text("Game Over", self.font, 45, BLACK, WIDTH / 2, HEIGHT / 2, align="center")
+        self.draw_text("Your Score: {!s}".format(self.score), self.font, 24, BLACK, WIDTH / 2, HEIGHT / 2 + 50, align="center")
         pg.display.flip()
         self.wait_for_key()
 
