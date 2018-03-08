@@ -5,6 +5,7 @@ import random
 from settings import *
 from sprites import *
 from os import path
+import shelve
 
 class Game:
     def __init__(self):
@@ -43,6 +44,16 @@ class Game:
 
     def load_data(self):
         self.dir = path.dirname(__file__)
+
+        #high score
+        self.score_file = path.join(self.dir, 'score.txt')
+        f = shelve.open(self.score_file)
+        if 'high_score' in f:
+            self.high_score = f['high_score']
+        else:
+            self.high_score = 0
+        f.close()
+
         self.sprite_folder = path.join(self.dir, SPRITE_FOLDER)
         self.font_folder = path.join(self.dir, FONT_FOLDER)
         self.font =  path.join(self.font_folder, 'kenvector_future.ttf')
@@ -60,19 +71,29 @@ class Game:
         self.all_sprites = pg.sprite.LayeredUpdates()
         self.pipes = pg.sprite.Group()
         self.grounds = pg.sprite.Group()
+        self.backgrounds = pg.sprite.Group()
         self.player = Player(self)
+
+        #background
+        self.background = Background(0, self)
+        self.background_width = self.background.rect.width
+        self.background2 = Background(self.background_width - 10, self)
 
         # ground
         self.ground = Ground(0, self)
         self.ground_width = self.ground.rect.width
         self.ground2 = Ground(self.ground_width, self)
-        
+
         # sprite groups
         self.all_sprites.add(self.player)
         self.all_sprites.add(self.ground)
         self.all_sprites.add(self.ground2)
+        self.all_sprites.add(self.background)
+        self.all_sprites.add(self.background2)
         self.grounds.add(self.ground)
         self.grounds.add(self.ground2)
+        self.backgrounds.add(self.background)
+        self.backgrounds.add(self.background2)
 
         # initial pipes
         PipesGroup(WIDTH + 150, self)
@@ -101,6 +122,11 @@ class Game:
         for ground in self.grounds:
             if ground.rect.right < 0:
                 ground.rect.x = self.ground_width
+
+        # background moving
+        for background in self.backgrounds:
+            if background.rect.right < 0:
+                background.rect.x = self.background_width - 10
 
         # remove pipe
         for pipe in self.pipes:
@@ -138,11 +164,7 @@ class Game:
 
         # Game Loop - draw
         self.screen.fill(BACKGROUND)
-        #bg = self.game_spritesheet.get_image("background.png", None, None, WIDTH, HEIGHT)
-        #bg_rect = bg.get_rect()
-        #bg_rect.left, bg_rect.top = (0, 0)
-        #self.screen.blit(bg, bg_rect)
-        
+
         self.all_sprites.draw(self.screen)
 
         # Draw Score
@@ -155,25 +177,36 @@ class Game:
         self.screen.fill(WHITE)
         self.draw_text(TITLE, self.font, 45, BLACK, WIDTH / 2, HEIGHT / 2, align="center")
         self.draw_text("Press A Key To Start", self.font, 24, BLACK, WIDTH / 2, HEIGHT / 2 + 50, align="center")
+        self.draw_text("High Score: {!s}".format(self.high_score), self.font, 24, BLACK, WIDTH / 2, HEIGHT / 2 + 90, align="center")
         pg.display.flip()
         self.wait_for_key()
         
     def show_go_screen(self):
         self.screen.fill(WHITE)
         self.draw_text("Game Over", self.font, 45, BLACK, WIDTH / 2, HEIGHT / 2, align="center")
-        self.draw_text("Your Score: {!s}".format(self.score), self.font, 24, BLACK, WIDTH / 2, HEIGHT / 2 + 50, align="center")
+
+        #check against high score
+        if self.high_score < self.score:
+            self.high_score = self.score
+            f = shelve.open(self.score_file)
+            f['high_score'] = self.high_score
+            f.close()
+            self.draw_text("NEW HIGH SCORE: {!s}".format(self.score), self.font, 32, GREEN, WIDTH / 2, HEIGHT / 2 + 50, align="center")
+        else:
+            self.draw_text("Your Score: {!s}".format(self.score), self.font, 24, BLACK, WIDTH / 2, HEIGHT / 2 + 50, align="center")
+
         pg.display.flip()
         self.wait_for_key()
 
     def wait_for_key(self):
-        waiting = True
-        while waiting:
+        self.waiting = True
+        while self.waiting:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    waiting = False
+                    self.waiting = False
                     self.running = False
                 if event.type == pg.KEYUP:
-                    waiting = False
+                    self.waiting = False
 
 
 g = Game()

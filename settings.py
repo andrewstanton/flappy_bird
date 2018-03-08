@@ -19,13 +19,13 @@ PLAYER_Z = 2
 PLAYER_X = WIDTH * 1 / 4
 
 # Window Properties
-WINDOW_SPEED = 2
+WINDOW_SPEED = 3
 
 # Pipe properties
 PIPE_WIDTH = 80
 PIPE_HEIGHT = HEIGHT
 PIPE_GAP = 200
-PIPE_SPACE = 400
+PIPE_SPACE = 350
 PIPE_OFFSCREEN_GAP = 50
 PIPE_Z = 2
 
@@ -35,6 +35,9 @@ PIPE_BOTTOM_START = HEIGHT / 2 + (PIPE_GAP / 2)
 # Ground Properties
 GROUND_Z = 3
 GROUND_HEIGHT = HEIGHT + 20
+
+# Background Properties
+BACKGROUND_Z = 1
 
 # define colors
 WHITE = (255, 255, 255)

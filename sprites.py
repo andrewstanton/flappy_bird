@@ -10,7 +10,7 @@ class Spritesheet():
         self.spritesheet = pg.image.load(sprite).convert_alpha()
         self.xml = minidom.parse(xml)
 
-    def get_image(self, name, x_over = None, y_over = None, w_over = None, h_over=None):
+    def get_image(self, name, width=None, height=None):
         # get image data
         images = self.xml.getElementsByTagName('SubTexture')
         x = 0
@@ -21,28 +21,18 @@ class Spritesheet():
         # get data
         for img in images:
             if img.attributes['name'].value == name:
-                if x_over is None:
-                    x = int(img.attributes['x'].value)
-                if y_over is None:
-                    y = int(img.attributes['y'].value)
-                if w_over is None:
-                    w = int(img.attributes['width'].value)
-                if y_over is None:
-                    h = int(img.attributes['height'].value)
+                x = int(img.attributes['x'].value)
+                y = int(img.attributes['y'].value)
+                w = int(img.attributes['width'].value)
+                h = int(img.attributes['height'].value)
 
         image = pg.Surface((w, h), pg.SRCALPHA)
         image.blit(self.spritesheet, (0, 0), (x, y, w, h))
-        image = pg.transform.scale(image, (int(w * 3 / 4), int(h * 3 / 4)))
+        if not (width is None) and not (height is None):
+            image = pg.transform.scale(image, (int(w * width), int(h * height)))
+        else:
+            image = pg.transform.scale(image, (int(w * 3 / 4), int(h * 3 / 4) ))
         return image
-
-
-class Background(pg.sprite.Sprite):
-    def __init__(self, game):
-        pg.sprite.Sprite.__init__(self)  
-        self.image = game.game_spritesheet.get_image("background.png", None, None, WIDTH, HEIGHT)
-        self.rect = self.image.get_rect()
-        self.rect.left, self.rect.top = (0, 0)
-
 
 class Player(pg.sprite.Sprite):
     def __init__(self, game):
@@ -136,3 +126,13 @@ class Ground(pg.sprite.Sprite):
         self.mask = pg.mask.from_surface(self.image)
         self.rect.x -= WINDOW_SPEED
         
+class Background(pg.sprite.Sprite):
+    def __init__(self, x, game):
+        self._layer = BACKGROUND_Z
+        pg.sprite.Sprite.__init__(self)  
+        self.image = game.game_spritesheet.get_image("background.png", 1.3, 1.3)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, 0)
+    
+    def update(self):
+        self.rect.x -= WINDOW_SPEED / 2
